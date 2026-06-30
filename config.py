@@ -11,6 +11,10 @@ class Config:
     OUTPUT_DIR: str = "outputs"
     
     @classmethod
+    def is_mock_mode(cls) -> bool:
+        return os.getenv("MOCK_MODE", "false").lower() in ("1", "true", "yes")
+
+    @classmethod
     def validate(cls):
-        if not cls.OPENAI_API_KEY:
+        if not cls.is_mock_mode() and not cls.OPENAI_API_KEY:
             raise ValueError("OPENAI_API_KEY not set in .env file")

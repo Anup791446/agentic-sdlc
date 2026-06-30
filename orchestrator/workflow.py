@@ -9,7 +9,7 @@ from rich.markdown import Markdown
 from config import Config
 from models.schemas import (
     Task, TaskStatus, TaskType, 
-    EngineeringSummary, Requirement, ArchitectureDesign
+    EngineeringSummary, Requirement, ArchitectureDesign, ValidationResult
 )
 from orchestrator.task_graph import TaskGraph
 from agents.requirement_agent import RequirementAgent
@@ -115,6 +115,9 @@ class WorkflowOrchestrator:
             
         except Exception as e:
             console.print(f"[red]Error in {task.name}: {e}[/red]")
+            if "OpenAI insufficient quota" in str(e) or "insufficient_quota" in str(e):
+                self.task_graph.mark_failed(task.id, str(e))
+                return
             task.retries += 1
             
             if task.retries < Config.MAX_RETRIES:
@@ -190,13 +193,44 @@ class WorkflowOrchestrator:
         """Build the final engineering summary."""
         requirement = self.context.get("requirement")
         architecture = self.context.get("architecture")
+        validation = self.context.get("validation")
+
+        if requirement is None:
+            requirement = Requirement(
+                raw_input=self.context.get("raw_requirement", ""),
+                summary="",
+                functional_requirements=[],
+                non_functional_requirements=[],
+                ambiguities=[],
+                assumptions=[],
+                scenario_type="greenfield"
+            )
+
+        if architecture is None:
+            architecture = ArchitectureDesign(
+                overview="No architecture available.",
+                components=[],
+                api_contracts=[],
+                data_models=[],
+                tech_stack={},
+                diagrams=None
+            )
+
+        if validation is None:
+            validation = ValidationResult(
+                is_valid=False,
+                issues=["Workflow did not complete successfully."],
+                risks=[],
+                trade_offs=[],
+                recommendations=["Resolve workflow failures and rerun or enable mock mode."]
+            )
         
         summary = EngineeringSummary(
             requirement=requirement,
             architecture=architecture,
             code_artifacts=self.context.get("code_artifacts", []),
             test_artifacts=self.context.get("test_artifacts", []),
-            validation=self.context.get("validation"),
+            validation=validation,
             implementation_plan=self._generate_implementation_plan(),
             assumptions_and_limitations=requirement.assumptions if requirement else []
         )

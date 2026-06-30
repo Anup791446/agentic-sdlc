@@ -11,6 +11,8 @@ Usage:
     python main.py --interactive            # Interactive mode
 """
 
+import argparse
+import os
 import sys
 from rich.console import Console
 from rich.panel import Panel
@@ -65,37 +67,50 @@ def run_interactive():
 
 def main():
     """Main entry point."""
+    parser = argparse.ArgumentParser(description="Run the Agentic SDLC application")
+    parser.add_argument("requirement", nargs="*", help="Requirement text to process")
+    parser.add_argument("--interactive", action="store_true", help="Run in interactive requirement mode")
+    parser.add_argument("--mock", action="store_true", help="Run in mock mode without OpenAI calls")
+    parser.add_argument("--yes", action="store_true", help="Automatically confirm the requirement prompt")
+    args = parser.parse_args()
+
+    if args.mock:
+        os.environ["MOCK_MODE"] = "true"
+
     display_banner()
     
+    if args.mock:
+        console.print("[yellow]⚠️ Running in MOCK mode. No OpenAI API calls will be made.[/yellow]\n")
+
     # Validate configuration
     try:
         Config.validate()
     except ValueError as e:
         console.print(f"[red]Configuration Error: {e}[/red]")
-        console.print("\nPlease create a .env file with your OPENAI_API_KEY")
+        if not Config.is_mock_mode():
+            console.print("\nPlease create a .env file with your OPENAI_API_KEY")
         sys.exit(1)
-    
+
     # Determine the requirement to process
-    if len(sys.argv) > 1:
-        if sys.argv[1] == "--interactive":
-            requirement = run_interactive()
-        else:
-            requirement = " ".join(sys.argv[1:])
+    if args.interactive:
+        requirement = run_interactive()
+    elif args.requirement:
+        requirement = " ".join(args.requirement)
     else:
         console.print("[yellow]No requirement provided. Using default URL shortener example.[/yellow]\n")
         requirement = DEFAULT_REQUIREMENT
-    
+
     # Confirm before proceeding
     console.print(Panel(requirement.strip(), title="Requirement to Process", border_style="blue"))
-    
-    if not Confirm.ask("\nProceed with this requirement?"):
-        console.print("[yellow]Cancelled.[/yellow]")
-        sys.exit(0)
-    
+    if not args.yes:
+        if not Confirm.ask("\nProceed with this requirement?"):
+            console.print("[yellow]Cancelled.[/yellow]")
+            sys.exit(0)
+
     # Create and run the workflow
     orchestrator = WorkflowOrchestrator()
     orchestrator.create_workflow(requirement)
-    
+
     console.print("\n" + "="*60)
     summary = orchestrator.run()
     console.print("="*60 + "\n")

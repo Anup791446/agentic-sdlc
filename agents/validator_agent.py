@@ -45,3 +45,22 @@ class ValidatorAgent(BaseAgent):
 **Test Artifacts:** {len(test_artifacts)} test files generated
 
 **Sample Code (first file):**
+
+Evaluate:
+1. Is the architecture sound?
+2. Are there security concerns?
+3. Is the code production-ready?
+4. What risks exist?
+5. What trade-offs were made?"""
+
+        response = self.call_llm(prompt, expect_json=True)
+        parsed = self.parse_json(response)
+
+        return ValidationResult(
+            is_valid=parsed.get("is_valid", False),
+            issues=parsed.get("issues", []),
+            risks=parsed.get("risks", []),
+            trade_offs=parsed.get("trade_offs", []),
+            recommendations=parsed.get("recommendations", [])
+        )
+

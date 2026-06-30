@@ -1,4 +1,5 @@
 # agents/validator_agent.py
+import json
 from agents.base_agent import BaseAgent
 from models.schemas import ValidationResult, EngineeringSummary
 
@@ -32,6 +33,9 @@ class ValidatorAgent(BaseAgent):
         code_artifacts = input_data.get("code_artifacts", [])
         test_artifacts = input_data.get("test_artifacts", [])
         
+        compilation_summary = input_data.get("compilation_result")
+        test_summary = input_data.get("test_execution_result")
+
         prompt = f"""Review this engineering output:
 
 **Architecture:**
@@ -44,11 +48,18 @@ class ValidatorAgent(BaseAgent):
 **Code Artifacts:** {len(code_artifacts)} files generated
 **Test Artifacts:** {len(test_artifacts)} test files generated
 
-**Sample Code (first file):**
+**Compilation Summary:**
+{json.dumps(compilation_summary, indent=2)}
+
+**Test Execution Summary:**
+{json.dumps(test_summary, indent=2)}
+
+**Impact Analysis:**
+{json.dumps(input_data.get('impact_analysis', {}), indent=2)}
 
 Evaluate:
 1. Is the architecture sound?
-2. Are there security concerns?
+2. Are there security or integration concerns in the brownfield context?
 3. Is the code production-ready?
 4. What risks exist?
 5. What trade-offs were made?"""
@@ -61,6 +72,8 @@ Evaluate:
             issues=parsed.get("issues", []),
             risks=parsed.get("risks", []),
             trade_offs=parsed.get("trade_offs", []),
-            recommendations=parsed.get("recommendations", [])
+            recommendations=parsed.get("recommendations", []),
+            compilation_summary=parsed.get("compilation_summary"),
+            test_summary=parsed.get("test_summary")
         )
 

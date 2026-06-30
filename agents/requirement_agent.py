@@ -17,7 +17,8 @@ Always respond in JSON format with this structure:
     "non_functional_requirements": ["NFR1", "NFR2", ...],
     "ambiguities": ["Questions that need clarification"],
     "assumptions": ["Assumptions made to proceed"],
-    "scenario_type": "greenfield" or "brownfield"
+    "scenario_type": "greenfield" or "brownfield",
+    "recommended_steps": ["Short implementation steps or workflow milestones"]
 }"""
 
 class RequirementAgent(BaseAgent):
@@ -48,5 +49,6 @@ Extract structured requirements, identify gaps, and make assumptions where neede
             non_functional_requirements=parsed.get("non_functional_requirements", []),
             ambiguities=parsed.get("ambiguities", []),
             assumptions=parsed.get("assumptions", []),
-            scenario_type=parsed.get("scenario_type", "greenfield")
+            scenario_type=parsed.get("scenario_type", "greenfield"),
+            recommended_steps=parsed.get("recommended_steps", [])
         )

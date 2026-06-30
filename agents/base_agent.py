@@ -63,7 +63,13 @@ class BaseAgent(ABC):
                 ],
                 "ambiguities": ["Exact retention policy for analytics data"],
                 "assumptions": ["Use a modern web framework and managed database"],
-                "scenario_type": "greenfield"
+                "scenario_type": "greenfield",
+                "recommended_steps": [
+                    "Design a scalable microservice architecture",
+                    "Generate API and business logic code",
+                    "Create unit and integration tests",
+                    "Validate code quality and architecture"
+                ]
             }, indent=2)
         if self.name == "Software Architect":
             return json.dumps({

@@ -17,6 +17,11 @@ class TaskType(str, Enum):
     TEST_GENERATION = "test_generation"
     DOCUMENTATION = "documentation"
     VALIDATION = "validation"
+    REPO_ANALYSIS = "repo_analysis"
+    IMPACT_ANALYSIS = "impact_analysis"
+    BROWNFIELD_CODE_MODIFICATION = "brownfield_code_modification"
+    COMPILATION_VALIDATION = "compilation_validation"
+    TEST_EXECUTION = "test_execution"
 
 class Task(BaseModel):
     """Represents a single task in the workflow."""
@@ -26,6 +31,7 @@ class Task(BaseModel):
     description: str
     dependencies: list[str] = Field(default_factory=list)  # IDs of tasks this depends on
     status: TaskStatus = TaskStatus.PENDING
+    metadata: dict = Field(default_factory=dict)
     output: Optional[str] = None
     error: Optional[str] = None
     retries: int = 0
@@ -39,6 +45,7 @@ class Requirement(BaseModel):
     ambiguities: list[str]
     assumptions: list[str]
     scenario_type: str  # "greenfield" or "brownfield"
+    recommended_steps: list[str] = []
 
 class ArchitectureDesign(BaseModel):
     """System architecture output."""
@@ -55,6 +62,8 @@ class CodeArtifact(BaseModel):
     language: str
     content: str
     description: str
+    patch: Optional[str] = None
+    change_type: Optional[str] = None
 
 class TestArtifact(BaseModel):
     """Generated test artifact."""
@@ -63,6 +72,22 @@ class TestArtifact(BaseModel):
     content: str
     description: str
 
+class RepoSummary(BaseModel):
+    """Summary of an existing repository for brownfield analysis."""
+    repo_path: str
+    files: list[str]
+    python_files: list[str]
+    api_candidates: list[str] = []
+    impacted_modules: list[str] = []
+    python_file_details: dict[str, dict] = Field(default_factory=dict)
+
+class ImpactAnalysisResult(BaseModel):
+    """Brownfield impact analysis result."""
+    impacted_files: list[str]
+    change_strategy: str
+    compatibility_risks: list[str]
+    recommended_actions: list[str]
+
 class ValidationResult(BaseModel):
     """Validation output."""
     is_valid: bool
@@ -70,6 +95,8 @@ class ValidationResult(BaseModel):
     risks: list[str]
     trade_offs: list[str]
     recommendations: list[str]
+    compilation_summary: Optional[str] = None
+    test_summary: Optional[str] = None
 
 class EngineeringSummary(BaseModel):
     """Final output delivered to the user."""

@@ -56,7 +56,9 @@ class ArchitectAgent(BaseAgent):
 **Assumptions:**
 {chr(10).join(f'- {a}' for a in requirement.assumptions)}
 
-Design a production-ready architecture with clear component separation."""
+Design a production-ready architecture with clear component separation.
+
+If there is an existing codebase, consider the repository structure and impacted files when drafting the design."""
 
         response = self.call_llm(prompt, expect_json=True)
         parsed = self.parse_json(response)

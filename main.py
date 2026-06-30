@@ -71,6 +71,7 @@ def main():
     parser.add_argument("requirement", nargs="*", help="Requirement text to process")
     parser.add_argument("--interactive", action="store_true", help="Run in interactive requirement mode")
     parser.add_argument("--mock", action="store_true", help="Run in mock mode without OpenAI calls")
+    parser.add_argument("--repo-path", help="Path to an existing repository for brownfield analysis")
     parser.add_argument("--yes", action="store_true", help="Automatically confirm the requirement prompt")
     args = parser.parse_args()
 
@@ -107,9 +108,13 @@ def main():
             console.print("[yellow]Cancelled.[/yellow]")
             sys.exit(0)
 
+    if args.repo_path and not os.path.isdir(args.repo_path):
+        console.print(f"[red]Repository path not found: {args.repo_path}[/red]")
+        sys.exit(1)
+
     # Create and run the workflow
     orchestrator = WorkflowOrchestrator()
-    orchestrator.create_workflow(requirement)
+    orchestrator.create_workflow(requirement, repo_path=args.repo_path)
 
     console.print("\n" + "="*60)
     summary = orchestrator.run()

@@ -1,92 +1,71 @@
 # Agentic Software Engineering System
 
-An AI-powered system that transforms software requirements into production-ready engineering outputs.
+An AI-powered system that turns a natural-language software requirement into a structured engineering workflow with architecture suggestions, starter code, tests, and a validation report.
 
-## Features
+## What This Project Does
 
-- **Requirement Analysis**: Parses and normalizes vague or ambiguous requirements
-- **Architecture Design**: Creates scalable system architectures with component diagrams
-- **Code Generation**: Produces production-quality, modular code
-- **Test Generation**: Creates unit and integration tests
-- **Validation**: Identifies risks, trade-offs, and recommendations
+The system follows an agent-based software development pipeline:
 
-## Architecture
+1. Accepts a requirement from the user
+2. Analyzes the requirement
+3. Designs an architecture
+4. Generates source code
+5. Produces test cases
+6. Validates the output and saves a report
 
-```mermaid
-flowchart TB
-    subgraph Input
-        R[Requirement]
-    end
+## Project Structure
 
-    subgraph Orchestrator
-        TG[Task Graph]
-        WF[Workflow Engine]
-    end
-
-    subgraph Agents
-        RA[Requirement Agent]
-        AA[Architect Agent]
-        CA[Code Agent]
-        TA[Test Agent]
-        VA[Validator Agent]
-    end
-
-    subgraph Output
-        CODE[Code Artifacts]
-        TESTS[Test Files]
-        REPORT[Summary Report]
-    end
-
-    R --> WF
-    WF --> TG
-    TG --> RA --> AA --> CA --> TA --> VA
-    VA --> CODE
-    VA --> TESTS
-    VA --> REPORT
-```
+- main.py: command-line entry point and user interaction
+- orchestrator/: workflow orchestration and task graph management
+- agents/: specialized agents for requirement analysis, architecture, code, testing, and validation
+- models/: Pydantic schemas for workflow data
+- tests/: regression tests for workflow behavior
 
 ## Setup
-
-1. Create a virtual environment and install dependencies:
 
 ```powershell
 python -m venv venv
 .\venv\Scripts\python.exe -m pip install -r requirements.txt
 ```
 
-2. Create a `.env` file in the project root with your OpenAI key:
+Create a `.env` file with your OpenAI key:
 
 ```env
-OPENAI_API_KEY=sk-your-real-openai-key
+OPENAI_API_KEY=your-openai-key
 ```
 
-3. (Optional) Do not commit `.env` to GitHub. Add it to `.gitignore` if needed.
+## Run the Project
 
-## Running the project
-
-- Run with a real OpenAI key:
+### Real mode
 
 ```powershell
-.\venv\Scripts\python.exe main.py
+.\venv\Scripts\python.exe main.py "Build a simple todo app with login and persistence"
 ```
 
-- Run with a custom requirement:
+### Mock mode
 
 ```powershell
-.\venv\Scripts\python.exe main.py "Build a URL shortener service"
+.\venv\Scripts\python.exe main.py "Build a simple todo app with login and persistence" --mock --yes
 ```
 
-### Mock mode for local testing
+Mock mode is useful for local testing and demos when OpenAI access is unavailable.
 
-Mock mode runs without calling OpenAI and is useful when you do not have a valid key or want to test locally:
+## Output
+
+Each successful run creates a timestamped folder under the outputs directory containing:
+
+- REPORT.md
+- architecture.md
+- src/ for generated code
+- tests/ for generated tests
+
+## Testing
 
 ```powershell
-.\venv\Scripts\python.exe main.py --mock --yes
+.\venv\Scripts\python.exe -m pytest -q tests/test_workflow.py
 ```
-
-This adds a safe test path without changing the default behavior for users who run the project normally.
 
 ## Notes
 
-- Normal execution still requires `OPENAI_API_KEY` in `.env`.
-- `--mock --yes` is optional and only used for local testing without OpenAI.
+- Real execution requires a valid OpenAI API key.
+- The generated output is intended as a starter scaffold and should be reviewed before real-world use.

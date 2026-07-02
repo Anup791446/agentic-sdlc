@@ -11,6 +11,9 @@ __pycache__/
 # Outputs (optional - you may want to commit example outputs)
 outputs/
 
+# Local teaching or presentation notes
+docs/
+
 # OS
 .DS_Store
 Thumbs.db

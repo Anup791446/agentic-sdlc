@@ -604,16 +604,18 @@ class WorkflowOrchestrator:
         iteration = 0
         max_iterations = 20  # Safety limit
         
-        while not self.task_graph.is_complete() and iteration < max_iterations:
+        while iteration < max_iterations:
             if not self.context.get("workflow_expanded") and self.task_graph.tasks["T1"].status == TaskStatus.COMPLETED:
                 self._expand_workflow()
 
+            if self.task_graph.is_complete():
+                break
+
             ready_tasks = self.task_graph.get_ready_tasks()
-            
             if not ready_tasks:
                 console.print("[yellow]No tasks ready. Waiting...[/yellow]")
                 break
-            
+
             for task in ready_tasks:
                 self.execute_task(task)
             

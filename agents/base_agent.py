@@ -49,7 +49,35 @@ class BaseAgent(ABC):
             raise
 
     def _mock_response(self, user_prompt: str, expect_json: bool = False) -> str:
+        requirement_text = user_prompt.lower()
+        is_todo_app = any(keyword in requirement_text for keyword in ["todo", "task", "login", "persistence"])
+
         if self.name == "Requirement Analyst":
+            if is_todo_app:
+                return json.dumps({
+                    "summary": "Build a simple todo application with user authentication, task management, and persistence.",
+                    "functional_requirements": [
+                        "Allow users to register and log in",
+                        "Allow users to create, update, and delete tasks",
+                        "Persist tasks and user data",
+                        "Display task status and ownership"
+                    ],
+                    "non_functional_requirements": [
+                        "Ensure secure authentication",
+                        "Provide a responsive and simple user experience",
+                        "Support reliable data persistence"
+                    ],
+                    "ambiguities": ["Whether to support role-based access or single-user mode"],
+                    "assumptions": ["Use a simple web app with a backend API and persistent storage"],
+                    "scenario_type": "greenfield",
+                    "recommended_steps": [
+                        "Design a simple authentication and task management architecture",
+                        "Generate API and business logic code for todos",
+                        "Create unit and integration tests",
+                        "Validate persistence and user flow"
+                    ]
+                }, indent=2)
+
             return json.dumps({
                 "summary": "Build a scalable URL shortening service with analytics.",
                 "functional_requirements": [
@@ -71,7 +99,36 @@ class BaseAgent(ABC):
                     "Validate code quality and architecture"
                 ]
             }, indent=2)
+
         if self.name == "Software Architect":
+            if is_todo_app:
+                return json.dumps({
+                    "overview": "A simple todo application with authentication, task CRUD operations, and persistence.",
+                    "components": [
+                        {"name": "Auth Service", "responsibility": "Handle user registration and login", "tech": "FastAPI"},
+                        {"name": "Todo Service", "responsibility": "Manage task creation, updates, deletion, and status", "tech": "FastAPI"},
+                        {"name": "Persistence Layer", "responsibility": "Store users and tasks", "tech": "SQLite"}
+                    ],
+                    "api_contracts": [
+                        {"endpoint": "/auth/register", "method": "POST", "description": "Register a user", "request_body": {"username": "string", "password": "string"}, "response": {"message": "string"}},
+                        {"endpoint": "/auth/login", "method": "POST", "description": "Authenticate a user", "request_body": {"username": "string", "password": "string"}, "response": {"token": "string"}},
+                        {"endpoint": "/todos", "method": "GET", "description": "List tasks for the authenticated user", "request_body": {}, "response": {"todos": ["array"]}},
+                        {"endpoint": "/todos", "method": "POST", "description": "Create a task", "request_body": {"title": "string", "completed": "boolean"}, "response": {"todo": "object"}}
+                    ],
+                    "data_models": [
+                        {"name": "User", "fields": {"id": "int", "username": "string", "password_hash": "string"}},
+                        {"name": "Todo", "fields": {"id": "int", "title": "string", "completed": "bool", "owner_id": "int"}}
+                    ],
+                    "tech_stack": {
+                        "language": "Python",
+                        "framework": "FastAPI",
+                        "database": "SQLite",
+                        "cache": "None",
+                        "other": ["pytest", "uvicorn"]
+                    },
+                    "diagrams": "graph TD; A[Client] --> B[Auth Service]; A --> C[Todo Service]; C --> D[SQLite Database];"
+                }, indent=2)
+
             return json.dumps({
                 "overview": "A scalable URL shortener using microservices for API, storage, and analytics.",
                 "components": [
@@ -94,7 +151,20 @@ class BaseAgent(ABC):
                 },
                 "diagrams": "graph TD; A[API Service] --> B[Database]; A --> C[Analytics Service];"
             }, indent=2)
+
         if self.name == "Code Generator":
+            if is_todo_app:
+                return json.dumps({
+                    "artifacts": [
+                        {
+                            "filename": "app.py",
+                            "language": "python",
+                            "content": "from fastapi import FastAPI, HTTPException\nfrom pydantic import BaseModel\n\napp = FastAPI()\n\nclass UserCreate(BaseModel):\n    username: str\n    password: str\n\nclass TodoCreate(BaseModel):\n    title: str\n    completed: bool = False\n\n# In-memory persistence for mock demo\nusers = {}\ntodos = {}\n\n@app.post('/auth/register')\ndef register_user(payload: UserCreate):\n    if payload.username in users:\n        raise HTTPException(status_code=400, detail='user exists')\n    users[payload.username] = payload.password\n    return {'message': 'registered'}\n\n@app.post('/auth/login')\ndef login_user(payload: UserCreate):\n    if users.get(payload.username) != payload.password:\n        raise HTTPException(status_code=401, detail='invalid credentials')\n    return {'token': f\"token-{payload.username}\"}\n\n@app.get('/todos')\ndef list_todos():\n    return {'todos': list(todos.values())}\n\n@app.post('/todos')\ndef create_todo(payload: TodoCreate):\n    todo_id = str(len(todos) + 1)\n    todo = {'id': todo_id, 'title': payload.title, 'completed': payload.completed}\n    todos[todo_id] = todo\n    return {'todo': todo}\n\n@app.put('/todos/{todo_id}')\ndef update_todo(todo_id: str, payload: TodoCreate):\n    if todo_id not in todos:\n        raise HTTPException(status_code=404, detail='not found')\n    todos[todo_id]['title'] = payload.title\n    todos[todo_id]['completed'] = payload.completed\n    return {'todo': todos[todo_id]}\n\n@app.delete('/todos/{todo_id}')\ndef delete_todo(todo_id: str):\n    if todo_id not in todos:\n        raise HTTPException(status_code=404, detail='not found')\n    removed = todos.pop(todo_id)\n    return {'deleted': removed}\n",
+                            "description": "FastAPI app with authentication and todo CRUD endpoints"
+                        }
+                    ]
+                }, indent=2)
+
             return json.dumps({
                 "artifacts": [
                     {
@@ -105,7 +175,20 @@ class BaseAgent(ABC):
                     }
                 ]
             }, indent=2)
+
         if self.name == "Test Generator":
+            if is_todo_app:
+                return json.dumps({
+                    "artifacts": [
+                        {
+                            "filename": "tests/test_api.py",
+                            "test_type": "integration",
+                            "content": "from fastapi.testclient import TestClient\nfrom app import app\n\nclient = TestClient(app)\n\ndef test_register_and_login():\n    register_response = client.post('/auth/register', json={'username': 'alice', 'password': 'secret'})\n    assert register_response.status_code == 200\n\n    login_response = client.post('/auth/login', json={'username': 'alice', 'password': 'secret'})\n    assert login_response.status_code == 200\n\n\ndef test_todo_crud_flow():\n    create_response = client.post('/todos', json={'title': 'Write report', 'completed': False})\n    assert create_response.status_code == 200\n\n    todos_response = client.get('/todos')\n    assert todos_response.status_code == 200\n",
+                            "description": "Integration tests for auth and todo CRUD flow"
+                        }
+                    ]
+                }, indent=2)
+
             return json.dumps({
                 "artifacts": [
                     {
@@ -116,6 +199,7 @@ class BaseAgent(ABC):
                     }
                 ]
             }, indent=2)
+
         if self.name == "Validator":
             return json.dumps({
                 "is_valid": True,
